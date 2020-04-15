@@ -41,14 +41,14 @@ func main() {
 	signal.Notify(c, syscall.SIGHUP, syscall.SIGQUIT, syscall.SIGTERM, syscall.SIGINT)
 	for {
 		s := <-c
-		log.Printf("discovery get a signal %s", s.String())
+		log.Printf("server get a signal %s", s.String())
 		switch s {
 		case syscall.SIGQUIT, syscall.SIGTERM, syscall.SIGINT:
 			close(Signal)
 			for ExitSignal > 0 {
 				time.Sleep(time.Second)
 			}
-			log.Println("discovery quit !!!")
+			log.Println("server quit !!!")
 			return
 		case syscall.SIGHUP:
 		default:
