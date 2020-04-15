@@ -1,10 +1,10 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"os/signal"
+	"sync"
 	"sync/atomic"
 	"syscall"
 	"time"
@@ -20,6 +20,14 @@ func Add()  {
 func Sub()  {
 	atomic.AddInt32(&ExitSignal, -1)
 }
+func OnceDo(params chan int, once sync.Once)  {
+	once.Do(func() {
+		close(params)
+		for len(params) > 0 {
+			time.Sleep(time.Second)
+		}
+	})
+}
 
 func main() {
 
@@ -30,7 +38,28 @@ func main() {
 		for {
 			select {
 			case <-Signal:
-				fmt.Println("End")
+				log.Println("End")
+				break forTag
+			}
+		}
+	}()
+	TestChan := make(chan int, 100000)
+	for i :=0; i < 100000; i ++ {
+		TestChan <- i
+	}
+	time.Sleep(time.Second)
+	log.Println("ok")
+	go func() {
+		once := sync.Once{}
+		Add()
+		defer Sub()
+	forTag:
+		for {
+			select {
+			case <- TestChan:
+			case <-Signal:
+				OnceDo(TestChan, once)
+				log.Println("End")
 				break forTag
 			}
 		}
