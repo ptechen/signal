@@ -4,7 +4,6 @@ import (
 	"log"
 	"os"
 	"os/signal"
-	"sync"
 	"sync/atomic"
 	"syscall"
 	"time"
@@ -19,14 +18,6 @@ func Add()  {
 
 func Sub()  {
 	atomic.AddInt32(&ExitSignal, -1)
-}
-func OnceDo(params chan int, once sync.Once)  {
-	once.Do(func() {
-		close(params)
-		for len(params) > 0 {
-			time.Sleep(time.Second)
-		}
-	})
 }
 
 func main() {
@@ -50,7 +41,6 @@ func main() {
 	time.Sleep(time.Second)
 	log.Println("ok")
 	go func() {
-		once := sync.Once{}
 		Add()
 		defer Sub()
 	forTag:
@@ -58,9 +48,9 @@ func main() {
 			select {
 			case <- TestChan:
 			case <-Signal:
-				OnceDo(TestChan, once)
-				log.Println("End")
-				break forTag
+				if len(TestChan) == 0 {
+					break forTag
+				}
 			}
 		}
 	}()
